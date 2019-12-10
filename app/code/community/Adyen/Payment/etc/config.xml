@@ -485,6 +485,15 @@
                 <session_validity>3</session_validity>
                 <sort_order>70</sort_order>
             </adyen_pay_by_mail>
+            <adyen_pay_by_link>
+                <active>0</active>
+                <model>adyen/adyen_payByLink</model>
+                <group>adyen</group>
+                <visible_type>frontend</visible_type>
+                <title>Pay By link</title>
+                <session_validity>1</session_validity>
+                <sort_order></sort_order>
+            </adyen_pay_by_link>
             <adyen_apple_pay translate="title" module="adyen">
                 <active>0</active>
                 <model>adyen/adyen_applePay</model>
