@@ -282,7 +282,6 @@ class Adyen_Payment_ProcessController extends Mage_Core_Controller_Front_Action
     {
         // get the response data
         $response = $this->getRequest()->getParams();
-
         // process
         try {
             $result = $this->validateResultUrl($response);
@@ -296,6 +295,19 @@ class Adyen_Payment_ProcessController extends Mage_Core_Controller_Front_Action
             } else {
                 $this->cancel();
             }
+        } catch (Exception $e) {
+            Mage::logException($e);
+            throw $e;
+        }
+    }
+
+    /**
+     * Adyen returns POST variables to this action
+     */
+    public function successPageAction()
+    {
+        try {
+            $this->_redirect('checkout/onepage/success', array('_query' => array('utm_nooverride' => '1')));
         } catch (Exception $e) {
             Mage::logException($e);
             throw $e;

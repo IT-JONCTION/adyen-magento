@@ -1038,7 +1038,7 @@ abstract class Adyen_Payment_Model_Adyen_Abstract extends Mage_Payment_Model_Met
             $this->_order = $paymentInfo->getOrder();
         }
 
-        return $this;
+        return $this->_order;
     }
 
     public function canCreateBillingAgreement()

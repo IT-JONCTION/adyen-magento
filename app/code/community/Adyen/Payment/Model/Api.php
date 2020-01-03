@@ -127,11 +127,12 @@ class Adyen_Payment_Model_Api extends Mage_Core_Model_Abstract
         $request['shopperEmail'] = $customerEmail;
         $request['shopperIP'] = $order->getXForwardedFor();
         $request['shopperReference'] = !empty($customerId) ? $customerId : self::GUEST_ID . $realOrderId;
-        if (!Mage::app()->getStore()->isAdmin() && Mage::getStoreConfigFlag('payment/adyen_cc/enable_threeds2', $storeId)) {
+        if (!Mage::app()->getStore()->isAdmin() && Mage::getStoreConfigFlag('payment/adyen_cc/enable_threeds2',
+                $storeId)) {
             $request = $this->setThreeds2Data($request, $payment);
         }
         $request = $this->setApplicationInfo($request);
-        $request = $this->buildAddressData($request, $billingAddress, $deliveryAddress);
+        $request = $this->buildAddressData($request, $billingAddress, $deliveryAddress, $paymentMethod);
         $request = $this->setRecurringMode($request, $paymentMethod, $payment, $storeId);
         $request = $this->setShopperInteraction($request, $paymentMethod, $payment, $storeId);
         $request = $this->setPaymentSpecificData($request, $paymentMethod, $payment);
@@ -341,11 +342,9 @@ class Adyen_Payment_Model_Api extends Mage_Core_Model_Abstract
             if (!$token) {
                 Mage::throwException(Mage::helper('adyen')->__('Missing token'));
             }
-
             $request['paymentMethod']['type'] = 'applepay';
             $request['paymentMethod']['applepay.token'] = base64_encode($token);
         }
-
         return $request;
     }
 
@@ -395,7 +394,7 @@ class Adyen_Payment_Model_Api extends Mage_Core_Model_Abstract
      * @param $shippingAddress
      * @return array
      */
-    public function buildAddressData($request, $billingAddress, $shippingAddress)
+    public function buildAddressData($request, $billingAddress, $shippingAddress, $paymentMethod = null)
     {
         if ($billingAddress) {
             // Billing address defaults
@@ -407,9 +406,12 @@ class Adyen_Payment_Model_Api extends Mage_Core_Model_Abstract
                 "country" => "ZZ"
             );
 
+            if ($paymentMethod === 'pay_by_link') {
+                $requestBillingDefaults['houseNumberOrName'] = 'N/A';
+            }
+
             // Save the defaults for later to compare if anything has changed
             $requestBilling = $requestBillingDefaults;
-
 
             if (!empty($billingAddress->getStreet(1))) {
                 $requestBilling["street"] = $billingAddress->getStreet(1);
@@ -447,9 +449,12 @@ class Adyen_Payment_Model_Api extends Mage_Core_Model_Abstract
                 "country" => "ZZ"
             );
 
+            if ($paymentMethod === 'pay_by_link') {
+                $requestDeliveryDefaults['houseNumberOrName'] = 'N/A';
+            }
+
             // Save the defaults for later to compare if anything has changed
             $requestDelivery = $requestDeliveryDefaults;
-
 
             if (!empty($shippingAddress->getStreet(1))) {
                 $requestDelivery["street"] = $shippingAddress->getStreet(1);
@@ -898,5 +903,67 @@ class Adyen_Payment_Model_Api extends Mage_Core_Model_Abstract
         $request['applicationInfo']['adyenPaymentSource']['version'] = Mage::helper('adyen')->getExtensionVersion();
         $request['applicationInfo']['adyenPaymentSource']['name'] = "adyen-magento";
         return $request;
+    }
+
+    /**
+     * Create a payment request
+     *
+     * @param $payment
+     * @param $amount
+     * @param $paymentMethod
+     * @return mixed
+     */
+    public function requestToPaymentLinks($order, $paymentMethod)
+    {
+        // configurations
+        $orderCurrencyCode = $order->getOrderCurrencyCode();
+        $incrementId = $order->getIncrementId();
+        $realOrderId = $order->getRealOrderId();
+        $customerId = Mage::helper('adyen/payment')->getShopperReference($order->getCustomerId(), $realOrderId);
+        $merchantAccount = Mage::helper('adyen')->getAdyenMerchantAccount();
+        $customerEmail = $order->getCustomerEmail();
+        $billingAddress = $order->getBillingAddress();
+        $deliveryAddress = $order->getShippingAddress();
+
+        if ($this->_helper()->getConfigDataDemoMode()) {
+            $requestUrl = self::ENDPOINT_CHECKOUT_TEST . "/v41/paymentLinks";
+        } else {
+            $requestUrl = self::ENDPOINT_PROTOCOL .
+                $this->_helper()->getConfigData("live_endpoint_url_prefix") .
+                self::CHECKOUT_ENDPOINT_LIVE_SUFFIX . "/v41/paymentLinks";
+        }
+
+        $billingCountryCode = (is_object($order->getBillingAddress()) && $order->getBillingAddress()->getCountry() != "") ?
+            $order->getBillingAddress()->getCountry() :
+            null;
+
+        $apiKey = $this->_helper()->getConfigDataApiKey();
+        $request = array();
+
+        if ($billingCountryCode) {
+            $request['countryCode'] = $billingCountryCode;
+        }
+
+        $request['merchantAccount'] = $merchantAccount;
+        $request['returnUrl'] = Mage::getUrl('adyen/process/successpage');
+        $request['amount'] = array(
+            'currency' => $orderCurrencyCode,
+            'value' => Mage::helper('adyen')->formatAmount($order->getGrandTotal(), $orderCurrencyCode)
+        );
+        $request['reference'] = $incrementId;
+        $request['fraudOffset'] = '0';
+        $request['shopperEmail'] = $customerEmail;
+        $request['shopperIP'] = $order->getXForwardedFor();
+        $request['shopperReference'] = !empty($customerId) ? $customerId : self::GUEST_ID . $realOrderId;
+        $request['expiresAt'] = date(
+            DATE_ATOM,
+            mktime(date("H") + 1, date("i"), date("s"), date("m"), date("j"), date("Y"))
+        );
+
+        $request = $this->setApplicationInfo($request);
+        $request = $this->buildAddressData($request, $billingAddress, $deliveryAddress, $paymentMethod);
+
+        $response = $this->doRequestJson($request, $requestUrl, $apiKey, null);
+        return json_decode($response, true);
     }
 }

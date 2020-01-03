@@ -622,7 +622,7 @@ class Adyen_Payment_Helper_Data extends Mage_Payment_Helper_Data
      * @param int|null $storeId
      * @return string
      */
-    public function getAdyenMerchantAccount($paymentMethod, $storeId = null)
+    public function getAdyenMerchantAccount($paymentMethod = null, $storeId = null)
     {
         $merchantAccount = trim($this->getConfigData('merchantAccount', 'adyen_abstract', $storeId));
         $merchantAccountPos = trim($this->getConfigData('pos_merchant_account', 'adyen_pos_cloud', $storeId));
