@@ -82,7 +82,7 @@ class Adyen_Payment_Model_ProcessNotification extends Mage_Core_Model_Abstract
         // authenticate result url
         $authStatus = Mage::getModel('adyen/authenticate')->authenticate($actionName, $params);
         if (!$authStatus['authentication']) {
-            $this->_debugData['error'] = 'Autentication failure please check your notification username and password. This must be the same in Magento as in the Adyen platform';
+            $this->_debugData['error'] = 'Authentication failure please check your notification username and password. This must be the same in Magento as in the Adyen platform';
             $this->_debug($storeId);
             return array('response' => '401', 'message' => $authStatus['message']);
         }

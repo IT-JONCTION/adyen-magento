@@ -696,6 +696,14 @@
                     <model>adyen/cronjob::updateNotificationQueue</model>
                 </run>
             </adyen_payment_process_notification_queue>
+            <adyen_payment_process_cancel_expired_paybylink>
+                <schedule>
+                    <cron_expr>*/60 * * * *</cron_expr>
+                </schedule>
+                <run>
+                    <model>adyen/cronjob::cancelExpiredPaybylink</model>
+                </run>
+            </adyen_payment_process_cancel_expired_paybylink>
         </jobs>
     </crontab>
 </config>
