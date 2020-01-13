@@ -58,7 +58,6 @@ class Adyen_Payment_PosController extends Mage_Core_Controller_Front_Action
         $serviceID = date("dHis");
         $initiateDate = date("U");
         $timeStamper = date("Y-m-d") . "T" . date("H:i:s+00:00");
-        $customerId = $quote->getCustomerId();
 
         # Always create new order increment ID, assuring payment transaction is linked to one order only
         $quote->unsReservedOrderId();
@@ -96,20 +95,7 @@ class Adyen_Payment_PosController extends Mage_Core_Controller_Front_Action
             ),
         );
 
-        // If customer exists add it into the request to store request
-        if (!empty($customerId)) {
-            $shopperEmail = $quote->getCustomerEmail();
-            $recurringContract = $adyenHelper->getConfigData('recurring_type', 'adyen_pos_cloud', $storeId);
-
-            if (!empty($recurringContract) && !empty($shopperEmail) && !empty($customerId)) {
-                $recurringDetails = array(
-                    'shopperEmail' => $shopperEmail,
-                    'shopperReference' => strval($customerId),
-                    'recurringContract' => $recurringContract
-                );
-                $request['SaleToPOIRequest']['PaymentRequest']['SaleData']['SaleToAcquirerData'] = http_build_query($recurringDetails);
-            }
-        }
+        $request = $this->addSaleToAcquirerData($request, $quote, $storeId);
 
         $quote->getPayment()->setAdditionalInformation('serviceID', $serviceID);
         $quote->getPayment()->setAdditionalInformation('initiateDate', $initiateDate);
@@ -326,5 +312,41 @@ class Adyen_Payment_PosController extends Mage_Core_Controller_Front_Action
         $this->getResponse()->setHeader('Content-type', 'application/json');
         $this->getResponse()->setBody($result);
         return $result;
+    }
+
+    /**
+     * Add SaleToAcquirerData for storing for recurring transactions and able to track platform and version
+     * When upgrading to new version of library we can use the client methods
+     * @param $request
+     * @param $quote
+     * @param $storeId
+     * @return mixed
+     */
+    public function addSaleToAcquirerData($request, $quote, $storeId)
+    {
+        $adyenHelper = Mage::helper('adyen');
+        $customerId = $quote->getCustomerId();
+
+        $saleToAcquirerData = [];
+
+        // If customer exists add it into the request to store request
+        if (!empty($customerId)) {
+            $shopperEmail = $quote->getCustomerEmail();
+            $recurringContract = $adyenHelper->getConfigData('recurring_type', 'adyen_pos_cloud', $storeId);
+
+            if (!empty($recurringContract) && !empty($shopperEmail)) {
+                $saleToAcquirerData['shopperEmail'] = $shopperEmail;
+                $saleToAcquirerData['shopperReference'] = strval($customerId);
+                $saleToAcquirerData['recurringContract'] = $recurringContract;
+            }
+        }
+
+        $saleToAcquirerData['applicationInfo']['merchantApplication']['version'] = $adyenHelper->getExtensionVersion();
+        $saleToAcquirerData['applicationInfo']['merchantApplication']['name'] = "adyen-magento";
+        $saleToAcquirerData['applicationInfo']['externalPlatform']['version'] = Mage::getVersion();
+        $saleToAcquirerData['applicationInfo']['externalPlatform']['name'] = "Magento";
+        $saleToAcquirerDataBase64 = base64_encode(json_encode($saleToAcquirerData));
+        $request['SaleToPOIRequest']['PaymentRequest']['SaleData']['SaleToAcquirerData'] = $saleToAcquirerDataBase64;
+        return $request;
     }
 }

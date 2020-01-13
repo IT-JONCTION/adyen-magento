@@ -52,6 +52,18 @@ class Adyen_Payment_Model_Cronjob
     }
 
     /**
+     * This cancels the orders created with Pay By Link after 1 hour. This is called by the cronjob of Magento
+     * To enable the cronjob on your webserver see the following magento documentation:
+     * http://www.magentocommerce.com/wiki/1_-_installation_and_configuration/how_to_setup_a_cron_job
+     */
+    public function cancelExpiredPaybylink()
+    {
+        // call CancelExpiredPaybylink
+        $this->_debugData = Mage::getModel('adyen/processPaybylink')->cancelExpiredPaybylink();
+        $this->_debug(null);
+    }
+
+    /**
      * Log debug data to file
      *
      * @param $storeId
