@@ -406,10 +406,6 @@ class Adyen_Payment_Model_Api extends Mage_Core_Model_Abstract
                 "country" => "ZZ"
             );
 
-            if ($paymentMethod === 'pay_by_link') {
-                $requestBillingDefaults['houseNumberOrName'] = 'N/A';
-            }
-
             // Save the defaults for later to compare if anything has changed
             $requestBilling = $requestBillingDefaults;
 
@@ -448,10 +444,6 @@ class Adyen_Payment_Model_Api extends Mage_Core_Model_Abstract
                 "houseNumberOrName" => '',
                 "country" => "ZZ"
             );
-
-            if ($paymentMethod === 'pay_by_link') {
-                $requestDeliveryDefaults['houseNumberOrName'] = 'N/A';
-            }
 
             // Save the defaults for later to compare if anything has changed
             $requestDelivery = $requestDeliveryDefaults;
