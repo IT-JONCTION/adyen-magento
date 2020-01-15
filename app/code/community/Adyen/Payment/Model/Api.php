@@ -132,7 +132,7 @@ class Adyen_Payment_Model_Api extends Mage_Core_Model_Abstract
             $request = $this->setThreeds2Data($request, $payment);
         }
         $request = $this->setApplicationInfo($request);
-        $request = $this->buildAddressData($request, $billingAddress, $deliveryAddress, $paymentMethod);
+        $request = $this->buildAddressData($request, $billingAddress, $deliveryAddress);
         $request = $this->setRecurringMode($request, $paymentMethod, $payment, $storeId);
         $request = $this->setShopperInteraction($request, $paymentMethod, $payment, $storeId);
         $request = $this->setPaymentSpecificData($request, $paymentMethod, $payment);
@@ -394,7 +394,7 @@ class Adyen_Payment_Model_Api extends Mage_Core_Model_Abstract
      * @param $shippingAddress
      * @return array
      */
-    public function buildAddressData($request, $billingAddress, $shippingAddress, $paymentMethod = null)
+    public function buildAddressData($request, $billingAddress, $shippingAddress)
     {
         if ($billingAddress) {
             // Billing address defaults
@@ -953,7 +953,7 @@ class Adyen_Payment_Model_Api extends Mage_Core_Model_Abstract
         );
 
         $request = $this->setApplicationInfo($request);
-        $request = $this->buildAddressData($request, $billingAddress, $deliveryAddress, $paymentMethod);
+        $request = $this->buildAddressData($request, $billingAddress, $deliveryAddress);
 
         $response = $this->doRequestJson($request, $requestUrl, $apiKey, null);
         return json_decode($response, true);
