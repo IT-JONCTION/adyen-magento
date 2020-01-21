@@ -341,10 +341,7 @@ class Adyen_Payment_PosController extends Mage_Core_Controller_Front_Action
             }
         }
 
-        $saleToAcquirerData['applicationInfo']['merchantApplication']['version'] = $adyenHelper->getExtensionVersion();
-        $saleToAcquirerData['applicationInfo']['merchantApplication']['name'] = "adyen-magento";
-        $saleToAcquirerData['applicationInfo']['externalPlatform']['version'] = Mage::getVersion();
-        $saleToAcquirerData['applicationInfo']['externalPlatform']['name'] = "Magento";
+        $saleToAcquirerData = Mage::helper('adyen')->setApplicationInfo($saleToAcquirerData, false);
         $saleToAcquirerDataBase64 = base64_encode(json_encode($saleToAcquirerData));
         $request['SaleToPOIRequest']['PaymentRequest']['SaleData']['SaleToAcquirerData'] = $saleToAcquirerDataBase64;
         return $request;
