@@ -41,7 +41,7 @@ class Adyen_Payment_Model_Adyen_Data_ApplicationInfo extends Adyen_Payment_Model
         'name' => Adyen_Payment_Helper_Data::PLUGIN_NAME
     );
     public $externalPlatform = array(
-        'name' => Adyen_Payment_Helper_Data::EXTERNAL_PLATFROM_NAME
+        'name' => Adyen_Payment_Helper_Data::EXTERNAL_PLATFORM_NAME
     );
 
     public function __construct()
