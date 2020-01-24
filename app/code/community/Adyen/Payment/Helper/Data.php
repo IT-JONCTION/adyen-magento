@@ -41,6 +41,9 @@ class Adyen_Payment_Helper_Data extends Mage_Payment_Helper_Data
     const CHECKOUT_COMPONENT_JS = 'sdk/3.0.0/adyen.js';
     const CHECKOUT_ENVIRONMENT_TEST = 'test';
     const CHECKOUT_ENVIRONMENT_LIVE = 'live';
+    const PLUGIN_NAME = 'adyen-magento';
+    const EXTERNAL_PLATFORM_NAME = 'Magento';
+
 
     /**
      * @return array
@@ -710,5 +713,25 @@ class Adyen_Payment_Helper_Data extends Mage_Payment_Helper_Data
         }
 
         return self::CHECKOUT_ENVIRONMENT_LIVE;
+    }
+
+    /**
+     * Set ApplicationInfo on /payments request
+     *
+     * @param $request
+     * @return mixed
+     */
+    public function setApplicationInfo($request, $ecom)
+    {
+        $request['applicationInfo']['externalPlatform']['version'] = Mage::getVersion();
+        $request['applicationInfo']['externalPlatform']['name'] = self::EXTERNAL_PLATFORM_NAME;
+        $request['applicationInfo']['merchantApplication']['version'] = Mage::helper('adyen')->getExtensionVersion();
+        $request['applicationInfo']['merchantApplication']['name'] = self::PLUGIN_NAME;
+        // we will keep this duplicate data for now
+        if ($ecom) {
+            $request['applicationInfo']['adyenPaymentSource']['version'] = Mage::helper('adyen')->getExtensionVersion();
+            $request['applicationInfo']['adyenPaymentSource']['name'] = self::PLUGIN_NAME;
+        }
+        return $request;
     }
 }

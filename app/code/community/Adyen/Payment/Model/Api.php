@@ -131,7 +131,7 @@ class Adyen_Payment_Model_Api extends Mage_Core_Model_Abstract
                 $storeId)) {
             $request = $this->setThreeds2Data($request, $payment);
         }
-        $request = $this->setApplicationInfo($request);
+        $request = Mage::helper('adyen')->setApplicationInfo($request, true);
         $request = $this->buildAddressData($request, $billingAddress, $deliveryAddress);
         $request = $this->setRecurringMode($request, $paymentMethod, $payment, $storeId);
         $request = $this->setShopperInteraction($request, $paymentMethod, $payment, $storeId);
@@ -883,21 +883,6 @@ class Adyen_Payment_Model_Api extends Mage_Core_Model_Abstract
     }
 
     /**
-     * Set ApplicationInfo on /payments request
-     *
-     * @param $request
-     * @return mixed
-     */
-    public function setApplicationInfo($request)
-    {
-        $request['applicationInfo']['externalPlatform']['version'] = Mage::getVersion();
-        $request['applicationInfo']['externalPlatform']['name'] = "Magento";
-        $request['applicationInfo']['adyenPaymentSource']['version'] = Mage::helper('adyen')->getExtensionVersion();
-        $request['applicationInfo']['adyenPaymentSource']['name'] = "adyen-magento";
-        return $request;
-    }
-
-    /**
      * Create a payment request
      *
      * @param $payment
@@ -952,7 +937,7 @@ class Adyen_Payment_Model_Api extends Mage_Core_Model_Abstract
             mktime(date("H") + 1, date("i"), date("s"), date("m"), date("j"), date("Y"))
         );
 
-        $request = $this->setApplicationInfo($request);
+        $request = Mage::helper('adyen')->setApplicationInfo($request, true);
         $request = $this->buildAddressData($request, $billingAddress, $deliveryAddress);
 
         $response = $this->doRequestJson($request, $requestUrl, $apiKey, null);
