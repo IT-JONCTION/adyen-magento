@@ -137,7 +137,7 @@ class Adyen_Payment_Model_Observer
                 mktime(date("H") + 1, date("i"), date("s"), date("m"), date("j"), date("Y"))
             ),
             "countryCode" => $this->_getCurrentCountryCode($adyenHelper, $store),
-            "shopperLocale" => $this->_getCurrentLocaleCode($adyenHelper, $store)
+            "shopperLocale" => $adyenHelper->getCurrentLocaleCode($store->getId())
         );
         $responseData = $this->_getDirectoryLookupResponse($adyFields, $store);
 
@@ -201,21 +201,6 @@ class Adyen_Payment_Model_Observer
     {
         return Mage::getSingleton('checkout/session')->getQuote();
     }
-
-
-    /**
-     * @return string
-     */
-    protected function _getCurrentLocaleCode($adyenHelper, $store)
-    {
-        $localeCode = $adyenHelper->getConfigData('shopperlocale', 'adyen_abstract', $store->getId());
-        if ($localeCode != "") {
-            return $localeCode;
-        }
-
-        return Mage::app()->getLocale()->getLocaleCode();
-    }
-
 
     /**
      * @return string
