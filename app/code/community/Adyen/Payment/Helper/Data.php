@@ -734,4 +734,17 @@ class Adyen_Payment_Helper_Data extends Mage_Payment_Helper_Data
         }
         return $request;
     }
+
+    /**
+     * @return string
+     */
+    public function getCurrentLocaleCode($storeId = null)
+    {
+        $localeCode = $this->getConfigData('shopperlocale', 'adyen_abstract', $storeId);
+        if ($localeCode != "") {
+            return $localeCode;
+        }
+
+        return Mage::app()->getLocale()->getLocaleCode();
+    }
 }
