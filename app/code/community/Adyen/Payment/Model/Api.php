@@ -886,11 +886,9 @@ class Adyen_Payment_Model_Api extends Mage_Core_Model_Abstract
      * Create a payment request
      *
      * @param $payment
-     * @param $amount
-     * @param $paymentMethod
      * @return mixed
      */
-    public function requestToPaymentLinks($order, $paymentMethod)
+    public function requestToPaymentLinks($order)
     {
         // configurations
         $orderCurrencyCode = $order->getOrderCurrencyCode();
@@ -901,6 +899,7 @@ class Adyen_Payment_Model_Api extends Mage_Core_Model_Abstract
         $customerEmail = $order->getCustomerEmail();
         $billingAddress = $order->getBillingAddress();
         $deliveryAddress = $order->getShippingAddress();
+        $storeId = $order->getStoreId();
 
         if ($this->_helper()->getConfigDataDemoMode()) {
             $requestUrl = self::ENDPOINT_CHECKOUT_TEST . "/v41/paymentLinks";
@@ -936,6 +935,7 @@ class Adyen_Payment_Model_Api extends Mage_Core_Model_Abstract
             DATE_ATOM,
             mktime(date("H") + 1, date("i"), date("s"), date("m"), date("j"), date("Y"))
         );
+        $request['shopperLocale'] = Mage::helper('adyen')->getCurrentLocaleCode($storeId);
 
         $request = Mage::helper('adyen')->setApplicationInfo($request, true);
         $request = $this->buildAddressData($request, $billingAddress, $deliveryAddress);
