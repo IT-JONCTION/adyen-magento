@@ -43,10 +43,20 @@ class Adyen_Payment_Model_Adyen_Oneclick extends Adyen_Payment_Model_Adyen_Cc
 
     public function isAvailable($quote = null)
     {
-        $isAvailble = parent::isAvailable($quote);
+        $isAvailable = parent::isAvailable($quote);
+
+        if (!is_null($quote)) {
+            $disableZeroTotal = Mage::getStoreConfig('payment/adyen_oneclick/disable_zero_total', $quote->getStoreId());
+        } else {
+            $disableZeroTotal = Mage::getStoreConfig('payment/adyen_oneclick/disable_zero_total');
+        }
+
+        if (!is_null($quote) && $quote->getGrandTotal() <= 0 && $disableZeroTotal) {
+            return false;
+        }
 
         // extra check if contract_type is allowed
-        if ($isAvailble) {
+        if ($isAvailable) {
             $recurringPaymentType = $this->getRecurringPaymentType();
             $recurringDetails = $this->getRecurringDetails();
 
@@ -61,7 +71,7 @@ class Adyen_Payment_Model_Adyen_Oneclick extends Adyen_Payment_Model_Adyen_Cc
             }
         }
 
-        return $isAvailble;
+        return $isAvailable;
     }
 
     /**
