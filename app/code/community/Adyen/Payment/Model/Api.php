@@ -220,7 +220,7 @@ class Adyen_Payment_Model_Api extends Mage_Core_Model_Abstract
             }
         } elseif ($paymentMethod === 'cc') {
             $request['enableRecurring'] = false;
-            $request['enableOneClick'] = true;
+            $request['enableOneClick'] = false;
 
             // if save card is disabled only shoot in as recurring if recurringType is set to ONECLICK,RECURRING
             if ($payment->getAdditionalInformation('store_cc') == '' &&
@@ -229,6 +229,7 @@ class Adyen_Payment_Model_Api extends Mage_Core_Model_Abstract
                 $request['enableRecurring'] = true;
             } elseif ($payment->getAdditionalInformation('store_cc') == '1') {
                 if ($recurringType == self::RECURRING_TYPE_ONECLICK || $recurringType == self::RECURRING_TYPE_ONECLICK_RECURRING) {
+                    $request['enableOneClick'] = true;
                     $request['paymentMethod']['storeDetails'] = true;
                 }
 
