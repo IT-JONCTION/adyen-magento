@@ -220,7 +220,7 @@ class Adyen_Payment_Model_Api extends Mage_Core_Model_Abstract
             }
         } elseif ($paymentMethod === 'cc') {
             $request['enableRecurring'] = false;
-            $request['enableOneClick'] = true;
+            $request['enableOneClick'] = false;
 
             // if save card is disabled only shoot in as recurring if recurringType is set to ONECLICK,RECURRING
             if ($payment->getAdditionalInformation('store_cc') == '' &&
@@ -229,6 +229,7 @@ class Adyen_Payment_Model_Api extends Mage_Core_Model_Abstract
                 $request['enableRecurring'] = true;
             } elseif ($payment->getAdditionalInformation('store_cc') == '1') {
                 if ($recurringType == self::RECURRING_TYPE_ONECLICK || $recurringType == self::RECURRING_TYPE_ONECLICK_RECURRING) {
+                    $request['enableOneClick'] = true;
                     $request['paymentMethod']['storeDetails'] = true;
                 }
 
@@ -900,13 +901,18 @@ class Adyen_Payment_Model_Api extends Mage_Core_Model_Abstract
         $billingAddress = $order->getBillingAddress();
         $deliveryAddress = $order->getShippingAddress();
         $storeId = $order->getStoreId();
+        if ($this->_helper()->getConfigData('store_payment_method', "adyen_pay_by_link", $storeId)) {
+            $storePaymentMethod = "true";
+        } else {
+            $storePaymentMethod = "false";
+        }
 
         if ($this->_helper()->getConfigDataDemoMode()) {
-            $requestUrl = self::ENDPOINT_CHECKOUT_TEST . "/v41/paymentLinks";
+            $requestUrl = self::ENDPOINT_CHECKOUT_TEST . "/v52/paymentLinks";
         } else {
             $requestUrl = self::ENDPOINT_PROTOCOL .
                 $this->_helper()->getConfigData("live_endpoint_url_prefix") .
-                self::CHECKOUT_ENDPOINT_LIVE_SUFFIX . "/v41/paymentLinks";
+                self::CHECKOUT_ENDPOINT_LIVE_SUFFIX . "/v52/paymentLinks";
         }
 
         $billingCountryCode = (is_object($order->getBillingAddress()) && $order->getBillingAddress()->getCountry() != "") ?
@@ -936,6 +942,7 @@ class Adyen_Payment_Model_Api extends Mage_Core_Model_Abstract
             mktime(date("H") + 1, date("i"), date("s"), date("m"), date("j"), date("Y"))
         );
         $request['shopperLocale'] = Mage::helper('adyen')->getCurrentLocaleCode($storeId);
+        $request['storePaymentMethod'] = $storePaymentMethod;
 
         $request = Mage::helper('adyen')->setApplicationInfo($request, true);
         $request = $this->buildAddressData($request, $billingAddress, $deliveryAddress);
