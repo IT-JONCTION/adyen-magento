@@ -943,6 +943,7 @@ class Adyen_Payment_Model_Api extends Mage_Core_Model_Abstract
         );
         $request['shopperLocale'] = Mage::helper('adyen')->getCurrentLocaleCode($storeId);
         $request['storePaymentMethod'] = $storePaymentMethod;
+        $request['lineItems'] = Mage::helper('adyen/payment')->getOpenInvoiceDataPayByLink($order);
 
         $request = Mage::helper('adyen')->setApplicationInfo($request, true);
         $request = $this->buildAddressData($request, $billingAddress, $deliveryAddress);

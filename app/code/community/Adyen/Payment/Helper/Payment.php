@@ -821,6 +821,88 @@ class Adyen_Payment_Helper_Payment extends Adyen_Payment_Helper_Data
     }
 
     /**
+     * Get openinvoice data lines
+     *
+     * @param $order
+     * @return array
+     */
+    public function getOpenInvoiceDataPayByLink($order)
+    {
+        $currency = $order->getOrderCurrencyCode();
+        $openInvoiceData = array();
+
+        // loop through items
+        foreach ($order->getItemsCollection() as $item) {
+            //skip dummies
+            if ($item->isDummy()) {
+                continue;
+            }
+            $id = $item->getProductId();
+            $product = $this->loadProductById($id);
+            $taxRate = $this->getTaxRate($order, $product->getTaxClassId());
+            if ($item->getSku() != "") {
+                $itemId = $item->getSku();
+            } elseif ($item->getId() != "") {
+                $itemId = $item->getId();
+            }
+
+            $openInvoiceData[] = [
+                "currencyCode" => $currency,
+                'description' => str_replace("\n", '', trim($item->getName())),
+                'itemAmount' => $this->formatAmount($item->getPrice(), $currency),
+                'itemVatAmount' => ($item->getTaxAmount() > 0 && $item->getPriceInclTax() > 0) ? $this->formatAmount($item->getPriceInclTax(),
+                        $currency) - $this->formatAmount($item->getPrice(),
+                        $currency) : $this->formatAmount($item->getTaxAmount(), $currency),
+                'itemVatPercentage' => $this->getMinorUnitTaxPercent($taxRate),
+                'numberOfItems' => (int)$item->getQtyOrdered(),
+                'itemId' => $itemId
+            ];
+
+        }
+
+        //discount cost
+        if ($order->getDiscountAmount() > 0 || $order->getDiscountAmount() < 0) {
+
+            $openInvoiceData[] = [
+                'currencyCode' => $currency,
+                'description' => $this->__('Total Discount'),
+                'itemAmount' => $this->formatAmount($order->getDiscountAmount(), $currency),
+                'itemVatAmount' => "0",
+                'itemVatPercentage' => "0",
+                'numberOfItems' => 1,
+            ];
+        }
+
+        //shipping cost
+        if ($order->getShippingAmount() > 0 || $order->getShippingTaxAmount() > 0) {
+            // Calculate vat percentage
+            $taxClass = Mage::getStoreConfig('tax/classes/shipping_tax_class', $order->getStoreId());
+            $taxRate = $this->getTaxRate($order, $taxClass);
+            $openInvoiceData[] = [
+                'currencyCode' => $currency,
+                'description' => $order->getShippingDescription(),
+                'itemAmount' => $this->formatAmount($order->getShippingAmount(), $currency),
+                'itemVatAmount' => $this->formatAmount($order->getShippingTaxAmount(), $currency),
+                'itemVatPercentage' => $this->getMinorUnitTaxPercent($taxRate),
+                'numberOfItems' => 1
+            ];
+        }
+
+        if ($order->getPaymentFeeAmount() > 0) {
+            $openInvoiceData[] = [
+                'currencyCode' => $currency,
+                'description' => $this->__('Payment Fee'),
+                'itemAmount' => $this->formatAmount($order->getPaymentFeeAmount(), $currency),
+                'itemVatAmount' => "0",
+                'itemVatPercentage' => "0",
+                'numberOfItems' => 1
+            ];
+        }
+
+        return $openInvoiceData;
+    }
+
+    /**
      * Checks if HigVat Cateogry is needed
      *
      * @param $paymentMethod
