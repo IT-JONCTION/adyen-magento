@@ -840,36 +840,40 @@ class Adyen_Payment_Helper_Payment extends Adyen_Payment_Helper_Data
             $id = $item->getProductId();
             $product = $this->loadProductById($id);
             $taxRate = $this->getTaxRate($order, $product->getTaxClassId());
-            if ($item->getSku() != "") {
+            $taxAmount = $item->getPrice() * ($item->getTaxPercent() / 100);
+            $formattedTaxAmount = $this->formatAmount($taxAmount, $currency);
+            $itemId = $id;
+            if (!empty($item->getSku())) {
                 $itemId = $item->getSku();
-            } elseif ($item->getId() != "") {
+            } elseif (!empty($item->getId())) {
                 $itemId = $item->getId();
             }
 
             $openInvoiceData[] = [
-                "currencyCode" => $currency,
+                'id' => $item->getId(),
+                'itemId' => $itemId,
                 'description' => str_replace("\n", '', trim($item->getName())),
-                'itemAmount' => $this->formatAmount($item->getPrice(), $currency),
-                'itemVatAmount' => ($item->getTaxAmount() > 0 && $item->getPriceInclTax() > 0) ? $this->formatAmount($item->getPriceInclTax(),
-                        $currency) - $this->formatAmount($item->getPrice(),
-                        $currency) : $this->formatAmount($item->getTaxAmount(), $currency),
-                'itemVatPercentage' => $this->getMinorUnitTaxPercent($taxRate),
-                'numberOfItems' => (int)$item->getQtyOrdered(),
-                'itemId' => $itemId
+                'amountExcludingTax' => $this->formatAmount($item->getPrice(), $currency),
+                'taxAmount' => $formattedTaxAmount,
+                'quantity' => (int)$item->getQtyOrdered(),
+                'taxCategory' => $item->getProduct()->getAttributeText('tax_class_id'),
+                'taxPercentage' => $this->getMinorUnitTaxPercent($taxRate)
             ];
 
         }
 
-        //discount cost
-        if ($order->getDiscountAmount() > 0 || $order->getDiscountAmount() < 0) {
+        //discount cost, it is always negative, if present
+        if ($order->getDiscountAmount() < 0) {
 
+            $itemAmount = $this->formatAmount($order->getDiscountAmount(), $currency);
             $openInvoiceData[] = [
-                'currencyCode' => $currency,
-                'description' => $this->__('Total Discount'),
-                'itemAmount' => $this->formatAmount($order->getDiscountAmount(), $currency),
-                'itemVatAmount' => "0",
-                'itemVatPercentage' => "0",
-                'numberOfItems' => 1,
+                'id' => $this->__('Discount'),
+                'amountExcludingTax' => $itemAmount,
+                'taxAmount' => "0",
+                'description' => $this->__('Discount'),
+                'quantity' => 1,
+                'taxCategory' => 'None',
+                'taxPercentage' => "0"
             ];
         }
 
@@ -879,26 +883,14 @@ class Adyen_Payment_Helper_Payment extends Adyen_Payment_Helper_Data
             $taxClass = Mage::getStoreConfig('tax/classes/shipping_tax_class', $order->getStoreId());
             $taxRate = $this->getTaxRate($order, $taxClass);
             $openInvoiceData[] = [
-                'currencyCode' => $currency,
+                'itemId' => 'shippingCost',
+                'amountExcludingTax' => $this->formatAmount($order->getShippingAmount(), $currency),
+                'taxAmount' => $this->formatAmount($order->getShippingTaxAmount(), $currency),
                 'description' => $order->getShippingDescription(),
-                'itemAmount' => $this->formatAmount($order->getShippingAmount(), $currency),
-                'itemVatAmount' => $this->formatAmount($order->getShippingTaxAmount(), $currency),
-                'itemVatPercentage' => $this->getMinorUnitTaxPercent($taxRate),
-                'numberOfItems' => 1
+                'quantity' => 1,
+                'taxPercentage' => $this->getMinorUnitTaxPercent($taxRate)
             ];
         }
-
-        if ($order->getPaymentFeeAmount() > 0) {
-            $openInvoiceData[] = [
-                'currencyCode' => $currency,
-                'description' => $this->__('Payment Fee'),
-                'itemAmount' => $this->formatAmount($order->getPaymentFeeAmount(), $currency),
-                'itemVatAmount' => "0",
-                'itemVatPercentage' => "0",
-                'numberOfItems' => 1
-            ];
-        }
-
         return $openInvoiceData;
     }
 
