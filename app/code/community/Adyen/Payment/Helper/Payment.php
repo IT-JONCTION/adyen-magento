@@ -864,7 +864,6 @@ class Adyen_Payment_Helper_Payment extends Adyen_Payment_Helper_Data
 
         //discount cost, it is always negative, if present
         if ($order->getDiscountAmount() < 0) {
-
             $itemAmount = $this->formatAmount($order->getDiscountAmount(), $currency);
             $openInvoiceData[] = [
                 'id' => $this->__('Discount'),
