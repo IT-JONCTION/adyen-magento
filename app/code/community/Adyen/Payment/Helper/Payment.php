@@ -602,17 +602,25 @@ class Adyen_Payment_Helper_Payment extends Adyen_Payment_Helper_Data
             'country' => 'N/A'
         );
 
-        if (trim($this->getStreet($billingAddress, true)->getName()) != "") {
-            $billingAddressRequest['street'] = trim($this->getStreet($billingAddress, true)->getName());
+        $isSeparateHouseNumberRequired = false;
+
+        if (trim($billingAddress->getCountryId()) != "") {
+            $billingAddressRequest['country'] = trim($billingAddress->getCountryId());
+            $isSeparateHouseNumberRequired = $this->isSeparateHouseNumberRequired($billingAddress->getCountryId());
         }
 
-        if ($this->getStreet($billingAddress, true)->getHouseNumber() != "") {
-            $billingAddressRequest['houseNumberOrName'] = trim(
-                $this->getStreet(
-                    $billingAddress,
-                    true
-                )->getHouseNumber()
-            );
+        if ($isSeparateHouseNumberRequired) {
+            if (trim($this->getStreet($billingAddress, true)->getName()) != "") {
+                $billingAddressRequest['street'] = trim($this->getStreet($billingAddress,
+                    true)->getName());
+            }
+
+            if ($this->getStreet($billingAddress, true)->getHouseNumber() != "") {
+                $billingAddressRequest['houseNumberOrName'] = trim($this->getStreet($billingAddress,
+                    true)->getHouseNumber());
+            }
+        } else {
+            $billingAddressRequest['street'] = implode(' ', $billingAddress->getStreet());
         }
 
         if (trim($billingAddress->getCity()) != "") {
@@ -629,10 +637,6 @@ class Adyen_Payment_Helper_Payment extends Adyen_Payment_Helper_Data
                 : $billingAddress->getRegionCode();
 
             $billingAddressRequest['stateOrProvince'] = trim($region);
-        }
-
-        if (trim($billingAddress->getCountryId()) != "") {
-            $billingAddressRequest['country'] = trim($billingAddress->getCountryId());
         }
 
         return $billingAddressRequest;
@@ -659,17 +663,24 @@ class Adyen_Payment_Helper_Payment extends Adyen_Payment_Helper_Data
             'country' => 'N/A'
         );
 
-        if (trim($this->getStreet($deliveryAddress, true)->getName() != "")) {
-            $deliveryAddressRequest['street'] = trim($this->getStreet($deliveryAddress, true)->getName());
+        $isSeparateHouseNumberRequired = false;
+
+        if (trim($deliveryAddress->getCountryId()) != "") {
+            $deliveryAddressRequest['country'] = trim($deliveryAddress->getCountryId());
+            $isSeparateHouseNumberRequired = $this->isSeparateHouseNumberRequired($deliveryAddress->getCountryId());
         }
 
-        if (trim($this->getStreet($deliveryAddress, true)->getHouseNumber()) != "") {
-            $deliveryAddressRequest['houseNumberOrName'] = trim(
-                $this->getStreet(
-                    $deliveryAddress,
-                    true
-                )->getHouseNumber()
-            );
+        if ($isSeparateHouseNumberRequired) {
+            if (trim($this->getStreet($deliveryAddress, true)->getName()) != "") {
+                $deliveryAddressRequest['street'] = trim($this->getStreet($deliveryAddress, true)->getName());
+            }
+
+            if ($this->getStreet($deliveryAddress, true)->getHouseNumber() != "") {
+                $deliveryAddressRequest['houseNumberOrName'] = trim($this->getStreet($deliveryAddress,
+                    true)->getHouseNumber());
+            }
+        } else {
+            $deliveryAddressRequest['street'] = implode(' ', $deliveryAddress->getStreet());
         }
 
         if (trim($deliveryAddress->getCity()) != "") {
@@ -684,9 +695,6 @@ class Adyen_Payment_Helper_Payment extends Adyen_Payment_Helper_Data
             $deliveryAddressRequest['stateOrProvince'] = trim($deliveryAddress->getRegionCode());
         }
 
-        if (trim($deliveryAddress->getCountryId()) != "") {
-            $deliveryAddressRequest['country'] = trim($deliveryAddress->getCountryId());
-        }
 
         return $deliveryAddressRequest;
     }
@@ -856,7 +864,7 @@ class Adyen_Payment_Helper_Payment extends Adyen_Payment_Helper_Data
                 'amountExcludingTax' => $this->formatAmount($item->getPrice(), $currency),
                 'taxAmount' => $formattedTaxAmount,
                 'quantity' => (int)$item->getQtyOrdered(),
-                'taxCategory' => $item->getProduct()->getAttributeText('tax_class_id'),
+                'taxCategory' => 'High',
                 'taxPercentage' => $this->getMinorUnitTaxPercent($taxRate)
             ];
 
@@ -928,5 +936,18 @@ class Adyen_Payment_Helper_Payment extends Adyen_Payment_Helper_Data
     public function loadProductById($id)
     {
         return Mage::getModel('catalog/product')->load($id);
+    }
+
+    /**
+     * Checks if the house number needs to be sent to the Adyen API separately or as it is in the street field
+     *
+     * @param $country
+     * @return bool
+     */
+    public function isSeparateHouseNumberRequired($country)
+    {
+        $countryList = ["nl", "de", "se", "no", "at", "fi", "dk"];
+
+        return in_array(strtolower($country), $countryList);
     }
 }
