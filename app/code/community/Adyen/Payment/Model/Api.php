@@ -886,7 +886,7 @@ class Adyen_Payment_Model_Api extends Mage_Core_Model_Abstract
     /**
      * Create a payment request
      *
-     * @param $payment
+     * @param $order
      * @return mixed
      */
     public function requestToPaymentLinks($order)
@@ -898,8 +898,8 @@ class Adyen_Payment_Model_Api extends Mage_Core_Model_Abstract
         $customerId = Mage::helper('adyen/payment')->getShopperReference($order->getCustomerId(), $realOrderId);
         $merchantAccount = Mage::helper('adyen')->getAdyenMerchantAccount();
         $customerEmail = $order->getCustomerEmail();
-        $billingAddress = $order->getBillingAddress();
-        $deliveryAddress = $order->getShippingAddress();
+        $billingAddress = Mage::helper('adyen/payment')->getHppBillingAddressDetails($order->getBillingAddress());
+        $deliveryAddress = Mage::helper('adyen/payment')->getHppDeliveryAddressDetails($order->getShippingAddress());
         $storeId = $order->getStoreId();
         if ($this->_helper()->getConfigData('store_payment_method', "adyen_pay_by_link", $storeId)) {
             $storePaymentMethod = "true";
@@ -910,14 +910,10 @@ class Adyen_Payment_Model_Api extends Mage_Core_Model_Abstract
         if ($this->_helper()->getConfigDataDemoMode()) {
             $requestUrl = self::ENDPOINT_CHECKOUT_TEST . "/v52/paymentLinks";
         } else {
-            $requestUrl = self::ENDPOINT_PROTOCOL .
-                $this->_helper()->getConfigData("live_endpoint_url_prefix") .
-                self::CHECKOUT_ENDPOINT_LIVE_SUFFIX . "/v52/paymentLinks";
+            $requestUrl = self::ENDPOINT_PROTOCOL . $this->_helper()->getConfigData("live_endpoint_url_prefix") . self::CHECKOUT_ENDPOINT_LIVE_SUFFIX . "/v52/paymentLinks";
         }
 
-        $billingCountryCode = (is_object($order->getBillingAddress()) && $order->getBillingAddress()->getCountry() != "") ?
-            $order->getBillingAddress()->getCountry() :
-            null;
+        $billingCountryCode = (is_object($order->getBillingAddress()) && $order->getBillingAddress()->getCountry() != "") ? $order->getBillingAddress()->getCountry() : null;
 
         $apiKey = $this->_helper()->getConfigDataApiKey();
         $request = array();
@@ -937,16 +933,15 @@ class Adyen_Payment_Model_Api extends Mage_Core_Model_Abstract
         $request['shopperEmail'] = $customerEmail;
         $request['shopperIP'] = $order->getXForwardedFor();
         $request['shopperReference'] = !empty($customerId) ? $customerId : self::GUEST_ID . $realOrderId;
-        $request['expiresAt'] = date(
-            DATE_ATOM,
-            mktime(date("H") + 1, date("i"), date("s"), date("m"), date("j"), date("Y"))
-        );
+        $request['expiresAt'] = date(DATE_ATOM,
+            mktime(date("H") + 1, date("i"), date("s"), date("m"), date("j"), date("Y")));
         $request['shopperLocale'] = Mage::helper('adyen')->getCurrentLocaleCode($storeId);
         $request['storePaymentMethod'] = $storePaymentMethod;
         $request['lineItems'] = Mage::helper('adyen/payment')->getOpenInvoiceDataPayByLink($order);
 
         $request = Mage::helper('adyen')->setApplicationInfo($request, true);
-        $request = $this->buildAddressData($request, $billingAddress, $deliveryAddress);
+        $request['billingAddress'] = $billingAddress;
+        $request['deliveryAddress'] = $deliveryAddress;
 
         $response = $this->doRequestJson($request, $requestUrl, $apiKey, null);
         return json_decode($response, true);
