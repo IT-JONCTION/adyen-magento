@@ -232,26 +232,30 @@ class Adyen_Payment_Model_ProcessNotification extends Mage_Core_Model_Abstract
             ''
         ) == 0
         ) {
-            // Only cancel the order when it is in state pending, payment review or if the ORDER_CLOSED is failed (means split payment has not be successful)
-            if ($order->getState() === Mage_Sales_Model_Order::STATE_PENDING_PAYMENT || $order->getState() === Mage_Sales_Model_Order::STATE_PAYMENT_REVIEW || $this->_eventCode == Adyen_Payment_Model_Event::ADYEN_EVENT_ORDER_CLOSED) {
-                $this->_debugData[$this->_count]['_updateOrder info'] = 'Going to cancel the order';
-
-                // if payment is API check and if notification is an authorisation
-                if ($this->_eventCode == Adyen_Payment_Model_Event::ADYEN_EVENT_AUTHORISATION && $this->_getPaymentMethodType($order) == 'api') {
-                    // don't cancel the order becasue order was successfull through api
-                    $this->_debugData[$this->_count]['_updateOrder warning'] = 'order is not cancelled because api result was succesfull';
-                } else {
-                    // don't cancel the order if previous state is authorisation with success=true
-                    // Split payments can fail if the second payment has failed the first payment is refund/cancelled as well so if it is a split payment that failed cancel the order as well
-                    if ($previousAdyenEventCode != "AUTHORISATION : TRUE" || $this->_eventCode == Adyen_Payment_Model_Event::ADYEN_EVENT_ORDER_CLOSED) {
-                        $this->_holdCancelOrder($order, false);
-                    } else {
-                        $order->setAdyenEventCode($previousAdyenEventCode); // do not update the adyenEventCode
-                        $this->_debugData[$this->_count]['_updateOrder warning'] = 'order is not cancelled because previous notification was a authorisation that succeeded';
-                    }
-                }
+            if ($this->_paymentMethodCode($order) == "adyen_pay_by_link") {
+                $this->_debugData[$this->_count]['_updateOrder info'] = 'Not going to cancel the order since this is a Pay By Link order';
             } else {
-                $this->_debugData[$this->_count]['_updateOrder info'] = 'Order is already processed so ignore this notification state is:' . $order->getState();
+                // Only cancel the order when it is in state pending, payment review or if the ORDER_CLOSED is failed (means split payment has not be successful)
+                if ($order->getState() === Mage_Sales_Model_Order::STATE_PENDING_PAYMENT || $order->getState() === Mage_Sales_Model_Order::STATE_PAYMENT_REVIEW || $this->_eventCode == Adyen_Payment_Model_Event::ADYEN_EVENT_ORDER_CLOSED) {
+                    $this->_debugData[$this->_count]['_updateOrder info'] = 'Going to cancel the order';
+
+                    // if payment is API check and if notification is an authorisation
+                    if ($this->_eventCode == Adyen_Payment_Model_Event::ADYEN_EVENT_AUTHORISATION && $this->_getPaymentMethodType($order) == 'api') {
+                        // don't cancel the order becasue order was successfull through api
+                        $this->_debugData[$this->_count]['_updateOrder warning'] = 'order is not cancelled because api result was successful';
+                    } else {
+                        // don't cancel the order if previous state is authorisation with success=true
+                        // Split payments can fail if the second payment has failed the first payment is refund/cancelled as well so if it is a split payment that failed cancel the order as well
+                        if ($previousAdyenEventCode != "AUTHORISATION : TRUE" || $this->_eventCode == Adyen_Payment_Model_Event::ADYEN_EVENT_ORDER_CLOSED) {
+                            $this->_holdCancelOrder($order, false);
+                        } else {
+                            $order->setAdyenEventCode($previousAdyenEventCode); // do not update the adyenEventCode
+                            $this->_debugData[$this->_count]['_updateOrder warning'] = 'order is not cancelled because previous notification was a authorisation that succeeded';
+                        }
+                    }
+                } else {
+                    $this->_debugData[$this->_count]['_updateOrder info'] = 'Order is already processed so ignore this notification state is:' . $order->getState();
+                }
             }
         } else {
             // Notification is successful
@@ -367,7 +371,8 @@ class Adyen_Payment_Model_ProcessNotification extends Mage_Core_Model_Abstract
             ) == 0
             ) {
                 $previousAdyenEventCode = $order->getAdyenEventCode();
-                if ($previousAdyenEventCode != "AUTHORISATION : TRUE") {
+                // For Pay By Link do not set a pspreference in case of success false, so that cancelExpiredPaybylink() can cancel it
+                if ($previousAdyenEventCode != "AUTHORISATION : TRUE" && $_paymentCode != "adyen_pay_by_link") {
                     $this->_updateOrderPaymentWithAdyenAttributes($paymentObj, $additionalData);
                 }
             } else {
@@ -546,17 +551,23 @@ class Adyen_Payment_Model_ProcessNotification extends Mage_Core_Model_Abstract
                 }
                 break;
             case Adyen_Payment_Model_Event::ADYEN_EVENT_OFFER_CLOSED:
-                if (!$order->canCancel()) {
-                    // Move the order from PAYMENT_REVIEW to NEW, so that can be cancelled
-                    $order->setState(Mage_Sales_Model_Order::STATE_NEW);
-                }
+                // Do not cancel the order if it is Pay By Link, cancelExpiredPaybylink() will do it.
+                if ($_paymentCode != "adyen_pay_by_link") {
+                    if (!$order->canCancel()) {
+                        // Move the order from PAYMENT_REVIEW to NEW, so that can be cancelled
+                        $order->setState(Mage_Sales_Model_Order::STATE_NEW);
+                    }
 
-                $this->_holdCancelOrder($order, true);
+                    $this->_holdCancelOrder($order, true);
+                }
                 break;
             case Adyen_Payment_Model_Event::ADYEN_EVENT_CAPTURE_FAILED:
             case Adyen_Payment_Model_Event::ADYEN_EVENT_CANCELLATION:
             case Adyen_Payment_Model_Event::ADYEN_EVENT_CANCELLED:
-                $this->_holdCancelOrder($order, true);
+                // Do not cancel the order if it is Pay By Link, cancelExpiredPaybylink() will do it.
+                if ($_paymentCode != "adyen_pay_by_link") {
+                    $this->_holdCancelOrder($order, true);
+                }
                 break;
             case Adyen_Payment_Model_Event::ADYEN_EVENT_CANCEL_OR_REFUND:
                 if (isset($this->_modificationResult) && $this->_modificationResult != "") {
