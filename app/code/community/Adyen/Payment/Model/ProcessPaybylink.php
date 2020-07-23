@@ -45,13 +45,18 @@ class Adyen_Payment_Model_ProcessPaybylink extends Mage_Core_Model_Abstract
 
         $this->debugData['processPaybylink begin'] = 'Begin to process cronjob for cancelling expired Pay By Link orders';
 
+        $hours = Mage::helper('adyen')->getConfigData('expires_after', "adyen_pay_by_link");
+        if ($hours == '') {
+            // Only if no value is set, set it to 1 hour
+            $hours = '1';
+        }
         $orderPaymentCollection = Mage::getModel('sales/order')->getCollection()
             ->join(array('payment' => 'sales/order_payment'),
                 'main_table.entity_id=payment.parent_id',
                 array('payment_method' => 'payment.method'))
             ->addFieldToFilter('created_at', array(
-                    'to' => strtotime('-60 minutes', time()),
-                    'datetime' => true
+                'to' => strtotime('-' . $hours . ' hours', time()),
+                'datetime' => true
                 ))
             ->addFieldToFilter('payment.method', "adyen_pay_by_link")
             ->addAttributeToFilter('state', array('neq' => 'canceled'))
