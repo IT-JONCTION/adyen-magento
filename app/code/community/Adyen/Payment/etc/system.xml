@@ -845,6 +845,16 @@
                             <show_in_website>1</show_in_website>
                             <show_in_store>1</show_in_store>
                         </sort_order>
+                        <expires_after translate="label">
+                            <label>Cancel orders after (hours)</label>
+                            <comment>Specify the number of hours after unsuccessful Pay By Link orders will be cancelled.
+                            </comment>
+                            <frontend_type>text</frontend_type>
+                            <sort_order>27</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                        </expires_after>
                         <store_payment_method translate="label">
                             <label>Store Payment Details</label>
                             <comment>Tokenize the shopper payment details, as configured on the Customer Area under Account -> Configure -> Checkout</comment>
