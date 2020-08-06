@@ -7,7 +7,7 @@ In order to keep processing payments with Adyen, please use the Pay By Link inte
 [For more information visit our documentation page](https://docs.adyen.com/plugins/magento-1/magento-1-eol)
 
 ## Integration
-The plugin integrates card component(Secured Fields) using Adyen Checkout for all card payments. Local/redirect payment methods are integrated with DirectoryLookup and HPP. For Point Of Sale (POS) payments we use Terminal API using Cloud-based communication. Boleto, MultiBanco and SEPA are a direct API integration into Adyen.
+The plugin integrates Pay By Link for all payment methods. For Point Of Sale (POS) payments we use Terminal API using Cloud-based communication.
 
 ## Requirements
 The plugin supports the Magento Community (version 1.8 and higher) and Enterprise edition (version 1.13 and higher).
@@ -40,10 +40,6 @@ Make sure that your Magento cron is running every minute. We are using a cronjob
 In case you are using a caching layer such as Varnish, please exclude the following URL pattern from being cached
 ```
 /adyen/process/*
-```
-and
-```
-/adyen/ThreeDS2Process/*
 ```
 
 ## Support

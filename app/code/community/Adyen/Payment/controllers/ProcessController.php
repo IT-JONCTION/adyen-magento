@@ -37,8 +37,6 @@ class Adyen_Payment_ProcessController extends Mage_Core_Controller_Front_Action
      */
     const SOAP_SERVER = 'Adyen_Payment_Model_Adyen_Data_Server_Notification';
 
-    const OPENINVOICE_SOAP_SERVER = 'Adyen_Payment_Model_Adyen_Data_Server_Openinvoice';
-
     /**
      * Redirect Block
      * need to be redeclared
@@ -157,121 +155,6 @@ class Adyen_Payment_ProcessController extends Mage_Core_Controller_Front_Action
         } catch (Exception $e) {
             $session->addException($e, Mage::helper('adyen')->__($e->getMessage()));
             $this->cancel();
-        }
-    }
-
-    public function validate3dAction()
-    {
-
-        // get current order
-        $session = $this->_getCheckout();
-
-        try {
-            $order = $this->_getOrder();
-            $session->setAdyenQuoteId($session->getQuoteId());
-            $session->setAdyenRealOrderId($session->getLastRealOrderId());
-            $order->loadByIncrementId($session->getLastRealOrderId());
-            $adyenStatus = $order->getAdyenEventCode();
-
-            // get payment details
-            $payment = $order->getPayment();
-
-            if ($payment === false) {
-                throw new Exception('No payment information available');
-            }
-
-            $paRequest = $payment->getAdditionalInformation('paRequest');
-            $md = $payment->getAdditionalInformation('md');
-            $issuerUrl = $payment->getAdditionalInformation('issuerUrl');
-
-            $infoAvailable = $payment && !empty($paRequest) && !empty($md) && !empty($issuerUrl);
-
-            // check adyen status and check if all information is available
-            if (!empty($adyenStatus) && $adyenStatus == 'RedirectShopper' && $infoAvailable) {
-                $request = $this->getRequest();
-                $requestMD = $request->getPost('MD');
-                $requestPaRes = $request->getPost('PaRes');
-
-                // authorise the payment if the user is back from the external URL
-                if ($request->isPost() && !empty($requestMD) && !empty($requestPaRes)) {
-                    if ($requestMD == $md) {
-                        $payment->setAdditionalInformation('paResponse', $requestPaRes);
-                        // send autorise3d request, catch exception in case of 'Refused'
-                        try {
-                            $result = $payment->getMethodInstance()->authorise3d($payment, $order->getGrandTotal());
-                        } catch (Exception $e) {
-                            $result = 'Refused';
-                            $order->setAdyenEventCode($result)->save();
-                        }
-
-                        // check if authorise3d was successful
-                        if ($result == 'Authorised') {
-                            $order->addStatusHistoryComment(
-                                Mage::helper('adyen')->__('3D-secure validation was successful'),
-                                $order->getStatus()
-                            )->save();
-
-                            $session->unsAdyenRealOrderId();
-                            $session->setQuoteId($session->getAdyenQuoteId(true));
-                            $session->getQuote()->setIsActive(false)->save();
-
-                            // add success to additionalData so you know that for this order 3D was successful
-                            $order->getPayment()->setAdditionalInformation('3d_successful', true);
-                            $order->save();
-
-                            $this->_redirect('checkout/onepage/success', array('_query' => array('utm_nooverride' => '1')));
-                        } else {
-                            // only cancel if 3D secure was not already successful
-                            if (!$order->getPayment()->getAdditionalInformation('3d_successful')) {
-                                $order->addStatusHistoryComment(Mage::helper('adyen')->__('3D-secure validation was unsuccessful.'))->save();
-                                $this->cancel();
-                            } else {
-                                // already succesfull so turn back to the success page
-                                $this->_redirect('checkout/onepage/success', array('_query' => array('utm_nooverride' => '1')));
-                            }
-                        }
-                    } else {
-                        $errorMsg = Mage::helper('adyen')->__('3D secure validation error');
-                        Adyen_Payment_Exception::throwException($errorMsg);
-                    }
-                } // otherwise, redirect to the external URL
-                else {
-                    $order->setState(
-                        Mage_Sales_Model_Order::STATE_PENDING_PAYMENT, true,
-                        Mage::helper('adyen')->__(
-                            'Customer was redirected to bank for 3D-secure validation. Once the shopper authenticated, the order status will be updated accordingly. 
-                        <br />Make sure that your notifications are being processed! 
-                        <br />If the order is stuck on this status, the shopper abandoned the session. The payment can be seen as unsuccessful. 
-                        <br />The order can be automatically cancelled based on the OFFER_CLOSED notification. Please contact Adyen Support to enable this.'
-                        )
-                    )->save();
-                    $this->getResponse()->setBody(
-                        $this->getLayout()->createBlock($this->_redirectBlockType)->setOrder($order)->toHtml()
-                    );
-                }
-            } else {
-                // log exception
-                $errorMsg = Mage::helper('adyen')->__('3D secure went wrong');
-
-                if ($order) {
-                    $errorMsg .= " for orderId: " . $order->getId();
-                }
-
-                if ($adyenStatus) {
-                    $errorMsg .= " adyenStatus is: " . $adyenStatus;
-                }
-
-                Adyen_Payment_Exception::throwException($errorMsg);
-            }
-        } catch (Exception $e) {
-            $alreadySuccessful = $order->getPayment() && $order->getPayment()->getAdditionalInformation('3d_successful');
-            // ignore because 3d was already successful for this order
-            if (!$alreadySuccessful) {
-                Mage::logException($e);
-                $this->cancel();
-            } else {
-                $this->_redirect('checkout/onepage/success', array('_query' => array('utm_nooverride' => '1')));
-            }
         }
     }
 
@@ -548,23 +431,6 @@ class Adyen_Payment_ProcessController extends Mage_Core_Controller_Front_Action
         }
     }
 
-    public function getOrderStatusAction()
-    {
-        $merchantReference = $this->getRequest()->getParam('merchantReference');
-        $result = Mage::getModel('adyen/getPosOrderStatus')->hasApprovedOrderStatus($merchantReference);
-
-        $response = "";
-
-        if ($result) {
-            $response = 'true';
-        }
-
-//        $this->getResponse()->clearHeaders()->setHeader('Content-type','application/json',true);
-        $this->getResponse()->setBody($response);
-
-        return $this;
-    }
-
     public function cancelAction()
     {
         $this->cancel();
@@ -642,23 +508,4 @@ class Adyen_Payment_ProcessController extends Mage_Core_Controller_Front_Action
             return false;
         }
     }
-
-    public function validate3ds2Action(){
-        $session = $this->_getCheckout();
-        $order = $this->_getOrder();
-        $order->loadByIncrementId($session->getLastRealOrderId());
-
-        $payment = $order->getPayment();
-        if (!$payment->getAdditionalInformation('threeDS2PaymentData')) {
-            $this->_redirectCheckoutCart();
-        } else {
-            $order->setState(Mage_Sales_Model_Order::STATE_PENDING_PAYMENT, true, Mage::helper('adyen')->__('Customer is performing 3DS 2.0 validation. Once the shopper authenticated, the order status will be updated accordingly. 
-                        <br />Make sure that your notifications are being processed! 
-                        <br />If the order is stuck on this status, the shopper abandoned the session. The payment can be seen as unsuccessful. 
-                        <br />The order can be automatically cancelled based on the OFFER_CLOSED notification. Please contact Adyen Support to enable this.'))->save();
-
-            $this->getResponse()->setBody($this->getLayout()->createBlock('adyen/threeds2')->setOrder($order)->toHtml());
-        }
-    }
-
 }

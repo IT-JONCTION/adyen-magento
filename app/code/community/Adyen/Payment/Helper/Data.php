@@ -80,37 +80,6 @@ class Adyen_Payment_Helper_Data extends Mage_Payment_Helper_Data
         return $types;
     }
 
-
-    /**
-     * @return array
-     */
-    public function getBoletoTypes()
-    {
-        $_types = Mage::getConfig()->getNode('default/adyen/payment/boletotypes')->asArray();
-        $types = array();
-        foreach ($_types as $data) {
-            $types[$data['code']] = $data['name'];
-        }
-
-        return $types;
-    }
-
-
-    /**
-     * @return array
-     */
-    public function getOpenInvoiceTypes()
-    {
-        $_types = Mage::getConfig()->getNode('default/adyen/payment/openinvoicetypes')->asArray();
-        $types = array();
-        foreach ($_types as $data) {
-            $types[$data['code']] = $data['name'];
-        }
-
-        return $types;
-    }
-
-
     /**
      * @return array
      */
@@ -230,24 +199,6 @@ class Adyen_Payment_Helper_Data extends Mage_Payment_Helper_Data
         }
 
         return ($amount / $format);
-    }
-
-    /**
-     * Creditcard type that is selected is different from creditcard type that we get back from the request this
-     * function get the magento creditcard type this is needed for getting settings like installments
-     * @param $ccType
-     * @return mixed
-     */
-    public function getMagentoCreditCartType($ccType)
-    {
-
-        $ccTypesMapper = Mage::helper('adyen')->getCcTypesAltData();
-
-        if (isset($ccTypesMapper[$ccType])) {
-            $ccType = $ccTypesMapper[$ccType]['code'];
-        }
-
-        return $ccType;
     }
 
     /**
@@ -425,7 +376,6 @@ class Adyen_Payment_Helper_Data extends Mage_Payment_Helper_Data
         $street = $this->formatStreet($address->getStreet(), $klarna);
         $streetName = $street['0'];
         unset($street['0']);
-//        $streetNr = implode('',$street);
         $streetNr = implode(' ', $street);
 
         return new Varien_Object(array('name' => trim($streetName), 'house_number' => trim($streetNr)));
@@ -496,32 +446,6 @@ class Adyen_Payment_Helper_Data extends Mage_Payment_Helper_Data
             $order->getStore()
         );
         return $calculation->getRate($request->setProductClassId($taxClass));
-    }
-
-    /**
-     * @param int|null $storeId
-     * @return mixed
-     */
-    public function getApplePayMerchantIdentifier($storeId = null)
-    {
-        if ($this->getConfigDataDemoMode($storeId)) {
-            return $this->getConfigData('merchant_identifier_test', 'adyen_apple_pay', $storeId);
-        }
-
-        return $this->getConfigData('merchant_identifier_live', 'adyen_apple_pay', $storeId);
-    }
-
-    /**
-     * @param int|null $storeId
-     * @return mixed
-     */
-    public function getApplePayFullPathLocationPEMFile($storeId = null)
-    {
-        if ($this->getConfigDataDemoMode($storeId)) {
-            return $this->getConfigData('full_path_location_pem_file_test', 'adyen_apple_pay', $storeId);
-        }
-
-        return $this->getConfigData('full_path_location_pem_file_live', 'adyen_apple_pay', $storeId);
     }
 
 
@@ -670,49 +594,6 @@ class Adyen_Payment_Helper_Data extends Mage_Payment_Helper_Data
 
         $formattedHtml .= "</table>";
         return $formattedHtml;
-    }
-
-    /**
-     * @param int|null $storeId
-     * @return string
-     */
-    public function getCheckoutContextUrl($storeId = null)
-    {
-        if (null === $storeId) {
-            $storeId = Mage::app()->getStore()->getStoreId();
-        }
-
-        if ($this->getConfigDataDemoMode($storeId)) {
-            return self::CHECKOUT_CONTEXT_URL_TEST;
-        }
-
-        return self::CHECKOUT_CONTEXT_URL_LIVE;
-    }
-
-    /**
-     * @param int|null $storeId
-     * @return string
-     */
-    public function getCheckoutCardComponentJs($storeId = null)
-    {
-        return $this->getCheckoutContextUrl($storeId) . self::CHECKOUT_COMPONENT_JS;
-    }
-
-    /**
-     * @param int|null $storeId
-     * @return string
-     */
-    public function getCheckoutEnvironment($storeId = null)
-    {
-        if (null === $storeId) {
-            $storeId = Mage::app()->getStore()->getStoreId();
-        }
-
-        if ($this->getConfigDataDemoMode($storeId)) {
-            return self::CHECKOUT_ENVIRONMENT_TEST;
-        }
-
-        return self::CHECKOUT_ENVIRONMENT_LIVE;
     }
 
     /**

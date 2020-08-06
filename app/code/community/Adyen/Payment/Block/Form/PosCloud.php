@@ -56,7 +56,7 @@ class Adyen_Payment_Block_Form_PosCloud extends Mage_Payment_Block_Form
             $labelBlock = Mage::app()->getLayout()->createBlock(
                 'core/template', null, array(
                     'template' => 'adyen/payment/payment_method_label.phtml',
-                    'payment_method_icon' => $this->getSkinUrl('images/adyen/img_trans.gif'),
+                    'payment_method_icon' => $this->getSkinUrl('images/adyen/hppPos.png'),
                     'payment_method_label' => Mage::helper('adyen')->getConfigData(
                         'title',
                         $this->getMethod()->getCode()

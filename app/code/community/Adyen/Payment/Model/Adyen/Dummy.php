@@ -30,7 +30,7 @@
  * @property   Adyen B.V
  * @copyright  Copyright (c) 2014 Adyen BV (http://www.adyen.com)
  */
-class Adyen_Payment_Model_Adyen_Dummy extends Adyen_Payment_Model_Adyen_Hpp
+class Adyen_Payment_Model_Adyen_Dummy extends Adyen_Payment_Model_Adyen_Abstract
 {
 
     /**

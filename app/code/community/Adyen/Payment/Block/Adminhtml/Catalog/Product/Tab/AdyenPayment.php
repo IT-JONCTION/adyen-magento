@@ -34,25 +34,6 @@ class Adyen_Payment_Block_Adminhtml_Catalog_Product_Tab_AdyenPayment extends Mag
     implements Mage_Adminhtml_Block_Widget_Tab_Interface
 {
 
-
-//    protected function _prepareForm()
-//    {
-//        $product = Mage::registry('product');
-//
-//        $form = new Varien_Data_Form();
-//        $fieldset = $form->addFieldset('tiered_price', array('legend' => Mage::helper('catalog')->__('Tier Pricing')));
-//
-//        $fieldset->addField('default_price', 'label', array(
-//            'label' => Mage::helper('catalog')->__('Default Price'),
-//            'title' => Mage::helper('catalog')->__('Default Price'),
-//            'name' => 'default_price',
-//            'bold' => true,
-//            'value' => $product->getPrice()
-//        ));
-//
-//        $this->setForm($form);
-//    }
-
     /**
      * @return Mage_Catalog_Model_Product
      */

@@ -48,11 +48,6 @@ class Adyen_Payment_Block_Adminhtml_System_Config_Fieldset_Method
             return false;
         }
 
-        // for ideal look at adyen HPP configuration
-        if ($activityPath == "payment/adyen_ideal/active") {
-            $activityPath = "payment/adyen_hpp/active";
-        }
-
         $isPaymentEnabled = (bool)(string)$this->_getConfigDataModel()->getConfigDataValue($activityPath);
 
         return (bool)$isPaymentEnabled;
