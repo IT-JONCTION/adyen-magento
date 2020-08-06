@@ -36,11 +36,6 @@ class Adyen_Payment_Helper_Data extends Mage_Payment_Helper_Data
     const KLARNA = "klarna";
     const RATEPAY = "ratepay";
     const AFTERPAY = "afterpay";
-    const CHECKOUT_CONTEXT_URL_LIVE = 'https://checkoutshopper-live.adyen.com/checkoutshopper/';
-    const CHECKOUT_CONTEXT_URL_TEST = 'https://checkoutshopper-test.adyen.com/checkoutshopper/';
-    const CHECKOUT_COMPONENT_JS = 'sdk/3.0.0/adyen.js';
-    const CHECKOUT_ENVIRONMENT_TEST = 'test';
-    const CHECKOUT_ENVIRONMENT_LIVE = 'live';
     const PLUGIN_NAME = 'adyen-magento';
     const EXTERNAL_PLATFORM_NAME = 'Magento';
 

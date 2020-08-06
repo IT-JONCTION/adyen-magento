@@ -95,11 +95,6 @@
             <adyen>
                 <class>Adyen_Payment_Block</class>
             </adyen>
-            <sales>
-                <rewrite>
-                    <adminhtml_billing_agreement_grid>Adyen_Payment_Block_Adminhtml_Sales_Billing_Agreement_Grid</adminhtml_billing_agreement_grid>
-                </rewrite>
-            </sales>
         </blocks>
         <payment>
             <groups>
@@ -383,50 +378,6 @@
                         <is_checkout>1</is_checkout>
                     </dankort>
                 </cctypes>
-                <boletotypes>
-                    <boletobancario_hsbc>
-                        <code>boletobancario_hsbc</code>
-                        <name>boletobancario_hsbc</name>
-                        <order>0</order>
-                    </boletobancario_hsbc>
-                    <boletobancario_itau>
-                        <code>boletobancario_itau</code>
-                        <name>boletobancario_itau</name>
-                        <order>0</order>
-                    </boletobancario_itau>
-                    <boletobancario_santander>
-                        <code>boletobancario_santander</code>
-                        <name>boletobancario_santander</name>
-                        <order>0</order>
-                    </boletobancario_santander>
-                    <boletobancario_bradesco>
-                        <code>boletobancario_bradesco</code>
-                        <name>boletobancario_bradesco</name>
-                        <order>0</order>
-                    </boletobancario_bradesco>
-                    <boletobancario_bancodobrasil>
-                        <code>boletobancario_bancodobrasil</code>
-                        <name>boletobancario_bancodobrasil</name>
-                        <order>0</order>
-                    </boletobancario_bancodobrasil>
-                </boletotypes>
-                <openinvoicetypes>
-                    <afterpay>
-                        <code>afterpay_default</code>
-                        <name>AfterPay Netherlands</name>
-                        <order>10</order>
-                    </afterpay>
-                    <klarna>
-                        <code>klarna</code>
-                        <name>Klarna</name>
-                        <order>20</order>
-                    </klarna>
-                    <ratepay>
-                        <code>ratepay</code>
-                        <name>RatePAY</name>
-                        <order>30</order>
-                    </ratepay>
-                </openinvoicetypes>
                 <recurringtypes>
                     <none>
                         <code></code>
