@@ -30,14 +30,15 @@
  * @property   Adyen B.V
  * @copyright  Copyright (c) 2014 Adyen BV (http://www.adyen.com)
  */
-class Adyen_Payment_Model_Source_PaymentRoutines
+class Adyen_Payment_Model_Source_VisibleType
 {
 
     public function toOptionArray()
     {
         return array(
-            array('value' => 'multi', 'label' => 'Multi-page Payment Routine'),
-            array('value' => 'single', 'label' => 'Single Page Payment Routine'),
+            array('value' => 'both', 'label' => 'Backend and Frontend'),
+            array('value' => 'backend', 'label' => 'Backend Only'),
+            array('value' => 'frontend', 'label' => 'Frontend Only')
         );
     }
 

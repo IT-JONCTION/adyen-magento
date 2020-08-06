@@ -42,8 +42,6 @@ class Adyen_Payment_Model_Api extends Mage_Core_Model_Abstract
     const ENDPOINT_CHECKOUT_TEST = "https://checkout-test.adyen.com/checkout";
     const GUEST_ID = "customer_";
 
-    protected $_paymentMethodMap;
-
     /**
      * Do the actual API request
      *
