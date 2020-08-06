@@ -16,39 +16,39 @@ class Adyen_Payment_Block_Adminhtml_Messageversion extends Mage_Adminhtml_Block_
 
     public function getMessage()
     {
-//        //check if it is after first login
-//        if ($this->_authSession->isFirstPageAfterLogin()) {
-//            try {
-//                $githubContent = $this->getDecodedContentFromGithub();
-//                $title = "Adyen extension version " . $githubContent['tag_name'] . " available!";
-//                $versionData[] = array(
-//                    'severity' => Mage_AdminNotification_Model_Inbox::SEVERITY_NOTICE,
-//                    'date_added' => $githubContent['published_at'],
-//                    'title' => $title,
-//                    'description' => $githubContent['body'],
-//                    'url' => $githubContent['html_url'],
-//                );
-//
-//                /*
-//                 * The parse function checks if the $versionData message exists in the inbox,
-//                 * otherwise it will create it and add it to the inbox.
-//                 */
-//                $this->_inbox->parse(array_reverse($versionData));
-//
-//                /*
-//                 * This will compare the currently installed version with the latest available one.
-//                 * A message will appear after the login if the two are not matching.
-//                 */
-//                if ($this->_adyenHelper->getExtensionVersion() != $githubContent['tag_name']) {
-//                    $message = "A new Adyen extension version is now available: ";
-//                    $message .= "<a href= \"" . $githubContent['html_url'] . "\" target='_blank'> " . $githubContent['tag_name'] . "!</a>";
-//                    $message .= " You are running the " . $this->_adyenHelper->getExtensionVersion() . " version. We advise to update your extension.";
-//                    return $message;
-//                }
-//            } catch (Exception $e) {
-//                return;
-//            }
-//        }
+        //check if it is after first login
+        if ($this->_authSession->isFirstPageAfterLogin()) {
+            try {
+                $githubContent = $this->getDecodedContentFromGithub();
+                $title = "Adyen extension version " . $githubContent['tag_name'] . " available!";
+                $versionData[] = array(
+                    'severity' => Mage_AdminNotification_Model_Inbox::SEVERITY_NOTICE,
+                    'date_added' => $githubContent['published_at'],
+                    'title' => $title,
+                    'description' => $githubContent['body'],
+                    'url' => $githubContent['html_url'],
+                );
+
+                /*
+                 * The parse function checks if the $versionData message exists in the inbox,
+                 * otherwise it will create it and add it to the inbox.
+                 */
+                $this->_inbox->parse(array_reverse($versionData));
+
+                /*
+                 * This will compare the currently installed version with the latest available one.
+                 * A message will appear after the login if the two are not matching.
+                 */
+                if ($this->_adyenHelper->getExtensionVersion() != $githubContent['tag_name']) {
+                    $message = "A new Adyen extension version is now available: ";
+                    $message .= "<a href= \"" . $githubContent['html_url'] . "\" target='_blank'> " . $githubContent['tag_name'] . "!</a>";
+                    $message .= " You are running the " . $this->_adyenHelper->getExtensionVersion() . " version. We advise to update your extension.";
+                    return $message;
+                }
+            } catch (Exception $e) {
+                return;
+            }
+        }
 
         return;
 
