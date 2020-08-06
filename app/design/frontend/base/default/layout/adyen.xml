@@ -56,9 +56,6 @@
     <checkout_cart_index>
         <reference name="head">
             <action method="addCss">
-                <stylesheet>css/adyen.css</stylesheet>
-            </action>
-            <action method="addCss">
                 <stylesheet>css/adyenstyle.css</stylesheet>
             </action>
             <action method="addCss">
@@ -75,15 +72,6 @@
 
     <checkout_onepage_index>
         <reference name="head">
-            <action method="addJs">
-                <script>adyen/payment/cc.js</script>
-            </action>
-            <action method="addJs">
-                <script>adyen/payment/iban.js</script>
-            </action>
-            <action method="addCss">
-                <stylesheet>css/adyen.css</stylesheet>
-            </action>
             <action method="addCss">
                 <stylesheet>css/adyenstyle.css</stylesheet>
             </action>
@@ -102,12 +90,6 @@
     <!-- For the Idev onestepcheckout module !-->
     <onestepcheckout_index_index>
         <reference name="head">
-            <action method="addJs">
-                <script>adyen/payment/cc.js</script>
-            </action>
-            <action method="addJs">
-                <script>adyen/payment/iban.js</script>
-            </action>
             <action method="addCss">
                 <stylesheet>css/adyenstyle.css</stylesheet>
             </action>
@@ -126,12 +108,6 @@
     <!-- For the IWD onestep checkout module !-->
     <opc_index_index>
         <reference name="head">
-            <action method="addJs">
-                <script>adyen/payment/cc.js</script>
-            </action>
-            <action method="addJs">
-                <script>adyen/payment/iban.js</script>
-            </action>
             <action method="addCss">
                 <stylesheet>css/adyenstyle.css</stylesheet>
             </action>
@@ -150,20 +126,11 @@
     <!-- For the Made Streamcheckout module !-->
     <streamcheckout_index_index>
         <reference name="head">
-            <action method="addJs">
-                <script>adyen/payment/cc.js</script>
-            </action>
-            <action method="addJs">
-                <script>adyen/payment/iban.js</script>
-            </action>
             <action method="addCss">
                 <stylesheet>css/adyenstyle.css</stylesheet>
             </action>
             <action method="addCss">
                 <stylesheet>css/adyencheckout.css</stylesheet>
-            </action>
-            <action method="addJs">
-                <script>adyen/payment/threeds2-js-utils.js</script>
             </action>
         </reference>
         <reference name="after_body_start">
@@ -186,9 +153,6 @@
             <action method="addCss">
                 <stylesheet>css/adyencheckout.css</stylesheet>
             </action>
-            <action method="addJs">
-                <script>adyen/payment/threeds2-js-utils.js</script>
-            </action>
         </reference>
         <reference name="after_body_start">
             <block type="core/template" name="after_body_start_script" template="adyen/after_body_start.phtml"/>
@@ -198,20 +162,11 @@
 
     <checkout_multishipping_billing>
         <reference name="head">
-            <action method="addJs">
-                <script>adyen/payment/cc.js</script>
-            </action>
-            <action method="addJs">
-                <script>adyen/payment/iban.js</script>
-            </action>
             <action method="addCss">
                 <stylesheet>css/adyenstyle.css</stylesheet>
             </action>
             <action method="addCss">
                 <stylesheet>css/adyencheckout.css</stylesheet>
-            </action>
-            <action method="addJs">
-                <script>adyen/payment/threeds2-js-utils.js</script>
             </action>
         </reference>
     </checkout_multishipping_billing>
@@ -225,20 +180,6 @@
             <block type="adyen/checkout_success" name="adyen.checkout.success" template="adyen/checkout/success.phtml"/>
         </reference>
     </checkout_multishipping_success>
-
-
-    <catalog_product_view>
-        <reference name="head">
-            <action method="addCss">
-                <stylesheet>css/adyen.css</stylesheet>
-            </action>
-        </reference>
-        <reference name="product.info.addtocart">
-            <action method="append" ifconfig="payment/adyen_apple_pay/show_outside_of_checkout">
-                <block>adyen.applepay.express.checkout</block>
-            </action>
-        </reference>
-    </catalog_product_view>
 
 
 </layout>
